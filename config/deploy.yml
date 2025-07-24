@@ -1,0 +1,44 @@
+# YAML format for GitHub actions
+name: Deploy to Multiple Environments
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_envs:
+        description: 'Comma-separated list of target environments (e.g. dev,qa,prod)'
+        required: true
+        default: dev,qa
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_ENVS: ${{ github.event.inputs.target_envs }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Show selected environments
+        run:
+          echo "Target environments: $DEPLOY_ENVS"
+
+      - name: Build application
+        run:
+          echo "Building application..."
+
+      - name: Deploy to selected environments
+        run: |
+          IFS=',' read -ra ENVS <<< "$DEPLOY_ENVS"
+          for ENV in "${ENVS[@]}"; do
+            echo "Deploying to $ENV..."
+            ./deploy.sh --env "$ENV"
+          done
+
+      - name: Post-deployment checks
+        run: echo "Running post-deployment checks..."
+
+      - name: Cleanup / Final status
+        if: always()
+        run:
+          echo "Deployment completed for: $DEPLOY_ENVS"

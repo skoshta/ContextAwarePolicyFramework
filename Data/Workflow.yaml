@@ -1,0 +1,74 @@
+# Different stages in CI/CD pipeline and the policies and checks that can be enforced at each stage.
+stages:
+  - stage: pre-commit
+    checks-performed:
+      - secret detection
+      - linting
+      - local unit tests
+    examples:
+      - prevent commiting secrets
+      - enforce code style
+      - require passing tests
+
+  - stage: build (CI)
+    checks-performed:
+      - static code analysis (SAST)
+      - dependency scanning (SBOM)
+      - license check
+    examples:
+      - disallow use of vulnerable libraries
+      - block GPL-licensed packages
+
+  - stage: test (CI)
+    checks-performed:
+      - unit/integration tests
+      - code coverage checks
+      - API contract validation
+    examples:
+      - minimum test coverage policy
+      - fail on contract mismatch
+
+  - stage: security-scanning
+    checks-performed:
+      - SAST/DAST
+      - secret scanning
+      - IaC analysis
+    examples:
+      - block deploy if critical/high vulnerabilities
+      - deny hardcoded keys
+      - validate terraform security
+
+  - stage: build-artifact
+    checks-performed:
+      - sign artifacts
+      - generate SBOMs
+      - upload to registry
+    examples:
+      - enforce artifact integrity
+      - require signed images
+
+  - stage: approval-gate
+    checks-performed:
+      - manual or automatic, based on rules
+    examples:
+      - require security view for prod
+      - block deploys on certain days
+
+  - stage: deploy (CD)
+    checks-performed:
+      - apply IaC
+      - apply secrets/config
+      - run db migrations
+    examples:
+      - enforce tagging / versioning
+      - require TLS endpoints
+      - prohibit test creds in production
+
+  - stage: post-deploy
+    checks-performed:
+      - health checks
+      - monitoring alert setup
+      - end-to-end tests
+    examples:
+      - require passing smoke tests
+      - validate logging and monitoring are in place

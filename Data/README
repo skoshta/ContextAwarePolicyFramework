@@ -1,0 +1,365 @@
+# Context Inputs for Adaptive policies
+# The below inputs drive policy decisions:
+inputs:
+    - input: environment
+      examples:
+        - dev
+        - qa
+        - staging/pre-prod
+        - prod
+      policies_categories:
+        - category: security_policy
+          policies:
+            - name: require_http(s)
+              description: avoid exposure of sensitive data
+              env:
+                - dev: optional
+                - qa: optional
+                - prod: mandatory
+            - name: iam_role_restrictions(least privilege)
+              description: enforce principle of least privilege
+              env:
+                - dev: allow broad scope
+                - qa: allow broad scope
+                - prod: strict
+            - name: block_hardcoded_secrets
+              description: avoid leaking secrets into production
+              env:
+                - dev: warn
+                - qa: warn
+                - prod: block
+            - name: sg_open_ports
+              description: reduce attack surface in prod
+              env:
+                - dev: allow
+                - qa: allow
+                - prod: block
+            - name: mutual_tls
+              description: ensure secure inter-service communication
+              env:
+                - dev: optional
+                - qa: optional
+                - prod: required
+            - name: golden_images_only
+              description: ensure supply chain integrity
+              env:
+                - dev: warn
+                - qa: warn
+                - prod: enforced whitelist only
+
+        - category: infrastructure_iac_policies
+          policies:
+            - name: resource_autoscaling_config
+              description: ensure availability under load
+              env:
+                - dev: optional
+                - qa: optional
+                - prod: mandatory
+            - name: instance_size
+              description: balance cost and performance
+              env:
+                - dev: small
+                - qa: medium (or large) depending on performance tests
+                - prod: large (optimized)
+            - name: encryption
+              description: data protection regulations
+              env:
+                - dev: otional
+                - qa: otional
+                - prod: required
+            - name: public_ip_exposure
+              description: reduce risk of unauthorized external access
+              env:
+                - dev: allow
+                - qa: allow
+                - prod: block
+            - name: default_vpc_usage
+              description: enforce networking best practices
+              env:
+                - dev: allowed
+                - qa: allowed
+                - prod: denied
+            - name: cloud_tags
+              description: support traceability and cost attributions
+              env:
+                - dev: warn
+                - qa: warn
+                - prod: block if missing
+
+        - category: cicd_controls
+          policies:
+            - name: test_coverage_threshold
+              description: confidence before promoting to prod
+              env:
+                - dev: lower %
+                - qa: lower %
+                - prod: higher coverage
+            - name: SAST_DAST_severity_threshold
+              description: prevent vulnerable code in prod
+              env:
+                - dev: allow with warnings
+                - qa: warn
+                - prod: block for critical
+            - name: deployment_approvals
+              description: enforce change control policies
+              env:
+                - dev: none
+                - qa: none
+                - prod: mandatory
+            - name: deployment_strategy
+              description: safer rollouts
+              env:
+                - dev: optional
+                - qa: optional
+                - prod: enforced
+            - name: runtime_policy_enforcement
+              description: align with zero-trust principles
+              env:
+                - dev: optional
+                - qa: optional
+                - prod: required
+
+        - category: data_policies
+          policies:
+            - name: data_tier_change
+              description: use of prod data in lower environment
+              env:
+                - dev: masked_only
+                - qa: masked_only
+                - prod: NA
+            - name: data_retention
+              description: compliance
+              env:
+                - dev: NA
+                - qa: NA
+                - prod: required
+            - name: cross_env_data_access_restrictions
+              description: prevent lateral data movement
+              env:
+                - dev: allowed
+                - qa: allowed
+                - prod: strictly controlled
+
+        - category: logging_monitoring_policies
+          policies:
+            - name: centralized_logging
+              description: enable incident response
+              env:
+                - dev: optional
+                - qa: optional
+                - prod: required
+            - name: alerting
+              description: alert on real / prod metrics
+              env:
+                - dev: no
+                - qa: no
+                - prod: strict
+            - name: audit_trail
+              description: ensure investigation and accountability
+              env:
+                - dev: optional
+                - qa: optional
+                - prod: required
+
+    - input: branch
+      examples:
+        - feature
+        - hotfix
+        - main
+      policies:
+        - name: builds_must_pass
+          description: allow faster iteration in dev, ensure stability in prod
+          branches:
+            - dev/feature: optional
+            - release: required
+        - name: code_coverage_threshold
+          description: enforce better test hygiene on prod code
+          branches:
+            - dev/feature: lower
+            - release: higher
+        - name: secret_detection
+          description: prevent secret leakage into prod
+          branches:
+            - dev/feature: warn
+            - release: block
+        - name: static_analysis (SAST) threshold
+          description: allow faster dev, enforce strict security before release
+          branches:
+            - dev/feature: medium
+            - release: all sevs
+        - name: IaC_scanning
+          description: reduce CI noise, enforce security before deploy
+          branches:
+            - dev/feature: optional or warn
+            - release: required
+        - name: verified_pr (or signed commits)
+          description: ensure authenticity of code to be released
+          branches:
+            - dev/feature: optional
+            - release: required
+        - name: image_vulnerability_scan
+          description: avoid blocking early, secure released artifacts
+          branches:
+            - dev/feature: warn
+            - release: fail on high (or critical)
+        - name: manual_approval (or peer review)
+          description: reduce overhead for dev, enforce controls on main or release branch
+          branches:
+            - dev/feature: optional
+            - release: required
+        - name: deployment_eligibility
+          description: prevent accidental deploys from non-release branches
+          branches:
+            - dev/feature: disallowed
+            - release: allowed
+        - name: pr_merge_protection_rules
+          description: guardrail quality and governance
+          branches:
+            - dev/feature: minimal
+            - release: strict (eg required reviewers, checks)
+        - name: sbom_generation_and_archival
+          description: audit trail for production releases
+          branches:
+            - dev/feature: optional
+            - release: mandatory
+        - name: release_notes_or_changelog_validation
+          description: ensure traceability and communication
+          branches:
+            - dev/feature: optional
+            - release: enforced
+
+    - input: user role
+      examples:
+        - developer
+        - lead
+        - SRE
+        - approver
+      policies_categories:
+        - category: access_control_policies
+          policies:
+            - name: code_commits
+              description: allow code commit to protected branches - prevent unauthorized changes to prod
+              roles:
+                - senior engineers
+                - release managers
+            - name: approve_prs
+              description: enforce separation of duties
+              roles:
+                - reviewers
+                - senior engineers
+            - name: modify_pipeline_configs
+              description: prevent abuse or misconfiguration of pipeline
+              roles:
+                - devops
+                - admin
+            - name: read_secrets (or encrypted configs)
+              description: protect sensitive credentials
+              roles:
+                - devops
+                - security
+        - category: policy_enforcement_levels
+          policies:
+            - name: all_checks_pass
+              description: all checks must pass before merge
+              roles:
+                - devs: required
+                - senior engineers: overridable
+            - name: skip_long_running_integration_tests
+              description: may skip long running integration tests
+              roles:
+                - devs: allowed
+                - senior engineers: allowed
+            - name: approve_risky_merges
+              description: allow risky merges in prod
+              roles:
+                - devs: not allowed
+                - senior engineers: allowed with comments
+            - name: push_hotfixes_to_prod
+              description: allowed to push changes to prod directly
+              roles:
+                - devs: not allowed
+                - senior engineers: allowed with CRs
+        - category: security_scan_overrides
+          policies:
+            - name: critical_cve_deploy_bocks
+              description: block deploys with critical or high vulnerability
+              roles:
+                - dev: block
+                - security_engineer: block
+            - name: allow_deploy_with_accepted_risk
+              description: risk-based flexibility
+              roles:
+                - dev: block
+                - security_engineer: allow
+            - name: custom_exceptions
+              description: prevent abuse of exception system
+              roles:
+                - dev: no
+                - security_engineer: yes
+        - category: infrastructure_iac_permissions
+          policies:
+            - name: terraform_in_lower_env
+              description: allow code to be deployed only through terraform
+              roles:
+                - devs: yes
+                - devops: yes
+                - security_engineer: no
+            - name: approve_terraform_plan_in_prod
+              description: allow terraform in prod
+              roles:
+                - devs: no
+                - devops: yes
+                - security_engineer: yes
+            - name: create_iam_roles (or modify)
+              description: allow users to create roles
+              roles:
+                - dev: no
+                - devops: yes (with review)
+                - security_engineer: yes
+            - name: approve_public_facing_infrastructure
+              description: protect public facing resources
+              roles:
+                - dev: no
+                - devops: yes (with review)
+                - security_engineer: yes
+
+
+    - input: data classification
+      examples:
+        - PCI
+        - PII
+        - internal
+      categories:
+        - name: access_control
+          policy: only authorized users/groups can access or deploy to systems handling restricted data
+          applies_to: role-based access, least privilege
+        - name: environment_access
+          policy: restricted data only deployable to hardened environments (eg isolated VPC, private subnets)
+          applies_to: IaC, cloud infrastructure policies
+        - name: encryption
+          policy: data-at-rest and data-in-transit must be encrypted - use KMS with key rotation
+          applies_to: Storage, dbs, messaging systems
+        - name: audit_and_logging
+          policy: must log all access and changes to sensitive rdata, enable immutable audit logs
+          applies_to: SIEM, cloud logs, API gateways
+        - name: tokenization (or masking)
+          policy: PII/PHI must be tokenized or masked in lower environments
+          applies_to: pre-prod environments, dev data use
+        - name: data residency
+          policy: restricted data must stay in approved geographic locations / regions
+          applies_to: cloud services, storage
+        - name: approval_workflow
+          policy: changes to apps, systems handling sensitive data require manual security or compliance approval
+          applies_to: CI/CD pipelines, change control
+        - name: secrets_management
+          policy: secrets must be stored in secure vaults, never hardcoded
+          applies_to: source control, environment configs, code files
+        - name: test_data_use
+          policy: prohibit use of production data in lower envs unless properly masked
+          applies_to: staging environments
+        - name: monitoring_and_alerts
+          policy: enhanced monitoring and anomaly detection for systems touching sensitive data
+          applies_to: runtime observability, SIEM
+        - name: deployment_conditions
+          policy: prevent automated deploys for regulated data - manual approvals or gates required
+          applies_to: CD pipelines

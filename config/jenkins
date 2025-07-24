@@ -1,0 +1,43 @@
+pipeline:
+  agent:
+    any: true
+
+  parameters:
+    - choice:
+        name: TARGET_ENVIRONMENTS
+        choices:
+          - dev,qa
+          - dev,qa,prod
+          - dev
+          - qa
+        description: "List of environments this deployment will target (comma-separated)"
+
+  environment:
+    DEPLOY_ENVS: "${TARGET_ENVIRONMENTS}"
+
+  stages:
+    - stage: Initialize
+      steps:
+        - script: |
+            echo "Target environments: ${DEPLOY_ENVS}"
+
+    - stage: Build
+      steps:
+        - echo: "Building application..."
+
+    - stage: Deploy to Environments
+      steps:
+        - script: |
+            IFS=',' read -ra ENVS <<< "$DEPLOY_ENVS"
+            for ENV in "${ENVS[@]}"; do
+              echo "Deploying to $ENV..."
+              ./deploy.sh --env $ENV
+            done
+
+    - stage: Post-Deploy Checks
+      steps:
+        - echo: "Running post-deployment checks..."
+
+  post:
+    always:
+      - echo: "Pipeline completed for environments: ${DEPLOY_ENVS}"

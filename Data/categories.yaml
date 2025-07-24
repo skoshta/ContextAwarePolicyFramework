@@ -1,0 +1,80 @@
+adaptive_policy_categories:
+  # Must have categories
+  - category: Security
+    description: Policies that enforce authentication, encryption, and protect against unauthorized access.
+    examples:
+      - Enforce TLS/SSL in production
+      - Disable debug endpoints in production
+      - Require token-based authentication for external APIs
+      - Encrypt sensitive fields in logs
+      - Apply RBAC based on user identity and environment
+    sub-categories:
+      - Data Protection policies:
+          - Enforce data-at-rest encryption
+          - Enforce data-in-transit encryption
+          - Enforce data retention
+          - Enforce data backup
+          - Enforce sensitive data exposure checks
+      - Logging and Monitoring policies:
+          - Enforce Splunk/DataDog/S3 buckets for logs
+          - Enforce CloudWatch alarms, Splunk for monitoring
+      - Network securities policies:
+          - Enforce internal service access only when inside trusted network zones
+          - Drop all traffic if running in unverified cloud region
+      - Secrets Management:
+          - Controls how secrets are used, accessed and  rotated
+          - Disallow using hard-coded credentials in production
+          - Validate secrets managers being used
+
+  - category: Compliance
+    description: Policies that ensure adherence to regulatory standards and internal controls.
+    examples:
+      - Retain logs for 90+ days
+      - Restrict deployments during freeze periods
+      - Require audit trails for sensitive operations
+      - Enforce data residency restrictions
+      - Validate tagging for compliance reporting
+
+  - category: Operational
+    description: Policies that govern deployment practices and infrastructure configurations.
+    examples:
+      - Require approval before production deployments
+      - Allow auto-scaling only in production
+      - Enforce naming conventions for resources
+      - Set resource quotas by environment
+      - Block deprecated APIs in production
+
+  - category: Debugging
+    description: Controls visibility and diagnostics based on environment.
+    examples:
+      - Enable verbose logging only in development
+      - Disable debug ports in production
+      - Redact secrets from logs
+      - Suppress internal error traces in production logs
+
+  - category: EnvironmentAware
+    description: Adjusts settings and controls based on the detected environment.
+    examples:
+      - Allow test credentials only in non-prod
+      - Enable experimental flags in dev
+      - Enforce stricter timeouts in production
+      - Use different secrets/configs by environment
+
+  # Good to have categories
+  - category: FeatureFlags
+    description: Controls rollout of features based on environment, users, or risk.
+    examples:
+      - Enable new feature in QA only
+      - Roll out beta features to specific user groups
+      - A/B testing configurations
+      - Geographic or tier-based feature gating
+
+  - category: RiskBasedAccess
+    description: Dynamically adapts access control based on context and risk level.
+    examples:
+      - Deny access from untrusted IPs without MFA
+      - Require re-authentication for sensitive actions
+      - Restrict service access outside business hours
+      - Use device trust scores to limit permissions
+
+

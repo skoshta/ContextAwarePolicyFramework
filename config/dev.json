@@ -1,0 +1,23 @@
+{
+  "environment": "dev",
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "myapp_dev",
+    "ssl": false
+  },
+  "api": {
+    "base_url": "https://dev-api.myapp.com",
+    "timeout": 30000,
+    "debug": true
+  },
+  "logging": {
+    "level": "debug",
+    "console": true,
+    "file": false
+  },
+  "features": {
+    "experimental": true,
+    "debug_mode": true
+  }
+}

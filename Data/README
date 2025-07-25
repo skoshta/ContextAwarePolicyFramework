@@ -363,3 +363,4 @@ inputs:
         - name: deployment_conditions
           policy: prevent automated deploys for regulated data - manual approvals or gates required
           applies_to: CD pipelines
+
